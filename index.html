@@ -1,0 +1,1298 @@
+<html>
+<head>
+    <title>Predicting COVID-19</title>
+	<meta name="description" content="Predicting Covid-19 with Gompertz function and its derivative model. Try to predict 1) total number of cases, 2) when infection peaks, 3) when it returns back to zero.">
+	<meta name="keywords" content="Predicting Covid-19, Gompertz function">
+	<meta-property="og:url" content="/" />
+	<meta-property="og:type" content="website" />
+	<meta property="og:title" content="Predicting Covid-19" />
+	<meta property="og:description" content="Predicting Covid-19 with Gompertz function and its derivative model. Try to predict 1) total number of cases, 2) when infection peaks, 3) when it returns back to zero." />
+	<meta name="robots" content="all">
+	<link rel="icon" type="image/png" href="/images/covid19.png" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-loading-overlay/2.1.7/loadingoverlay.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.2/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/solid.min.css" rel="stylesheet" />
+    <style type=text/css>
+    .navbar-brand {
+        font-size: 0.9em;
+        white-space:inherit;
+    }
+    .nav-link {font-size:0.6em;}
+    .btn { font-size: 0.6em; }
+    .ctry {
+        background: whitesmoke;
+        padding-top: 15px;
+        border-top: solid 6px #dcdcdc;
+    }
+        .body-content { padding-top:10px; }
+    @font-face {
+        font-family: "FontAwesome";
+        font-weight: normal;
+        font-style : normal;
+               src : url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.eot?v=4.3.0");
+               src : url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.eot?#iefix&v=4.3.0") format("embedded-opentype"),
+                     url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.woff2?v=4.3.0") format("woff2"),
+                     url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.woff?v=4.3.0") format("woff"),
+                     url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.ttf?v=4.3.0") format("truetype"),
+                     url("https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/fonts/fontawesome-webfont.svg?v=4.3.0#fontawesomeregular") format("svg");
+        }
+        .alert {
+            word-break:break-word;
+        }
+        .img-well {
+            border: 1px solid #c8ccd1;
+            padding: 3px;
+            background-color: #f8f9fa;
+            font-size: 94%;
+            text-align: center;
+            overflow: hidden;
+        }
+        h1, h3 {
+            text-align: center;
+            font-weight: normal;
+        }
+        h5 i { margin-top: 0.2em; }
+        #figures > div.col > span {
+            padding:5px;
+            display:block;
+            padding:2px 0;
+            margin:0 15px;
+        }
+
+        h3 { font-size:34px; }
+        h5 {
+            font-size: 100%;
+            white-space:nowrap;
+            width: 53%;
+            font-weight:normal;
+        }
+        #figures {
+            font-size: 75%;
+        }
+
+        .sm {
+            opacity: 0.6;
+            white-space: nowrap;
+        }
+
+        body {
+            font-size: 3em;
+        }
+
+        .tooltip {
+            font-size: 88%;
+        }
+
+        .tooltip-inner {
+            max-width: 600px;
+        }
+
+        canvas {
+            margin-left: auto;
+            margin-right: auto;
+            display:none;
+            cursor: normal;
+            margin-top:-10px;
+        }
+        canvas.show {
+            display:block;
+            cursor: pointer;
+        }
+
+	    @media (min-width: 768px) {
+            .container {
+                max-width: 864px;
+            }
+            .footer {
+            	font-size: .6em;
+            	text-align: center;
+            	background-color: #e9ecef;
+            }
+        }
+        @media (min-width:992px) {
+            .nav-link {font-size:1em;}
+            .btn { font-size: 1em; }
+            .navbar-brand {
+                font-size: 1.25em;
+            }
+            canvas { display:block; }
+            .handle { display:none; }
+            body {
+                font-size: 1em;
+            }
+
+            .tooltip-inner {
+                max-width: 200px;
+            }
+            #figures {
+                font-size:90%;
+            }
+            .container {
+                max-width: 960px;
+            }
+            .footer {
+            	font-size: 14px;
+            	text-align: center;
+            	background-color: #e9ecef;
+            }
+        }
+
+        @media (min-width: 1200px) {.container { max-width: 1140px; } }
+    </style>
+    <!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <script src="genetic/genetic.js"></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-5341016-65"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-5341016-65');
+</script>
+</head>
+<body>
+    <div class="container body-content">
+        <div class="jumbotron" style="margin-bottom:0;padding:20px 30px 5px 30px">
+        <h1>Predicting COVID-19</h1>
+            <p style=text-align:right;margin-bottom:0;margin-top:-20px>
+                <button class="btn btn-info" href=# onclick="$('.collapse.show').removeClass('show').addClass('tmp');$('.collapse:not(.tmp)').addClass('show');$('.collapse.tmp').removeClass('tmp')">
+                    MORE
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </p> <div class="collapse" id="more">
+            <p>
+              <b>Abstract</b>
+            <p>
+            Current program explores predictive properties of <span style=font-size:150%;font-family:seriff>e<sup>-e<sup>-t</sup></sup></span> type of functions. Though we expect it to have some utility value, its predictions were not independently reviewed.
+            <p>With that in mind, we apply our <a href="https://www.geogebra.org/graphing/svpu7zdd">model</a> to real-time COVID statistics. Using that model, we try to predict 1) total number of cases 2) when infection peaks 3) when it returns back to zero. 
+            <p>To assess prediction power, program offers retrospective prediction analysis against later observed values.
+            <p>
+              <b>Implementation Details</b>
+            <p>
+                We model COVID-19 epidemic growth as <a href="https://en.wikipedia.org/wiki/Gompertz_function">Gompertz function</a>. Precisely, we fit its <a href="https://www.geogebra.org/graphing/svpu7zdd">derivative</a> to reported cases. We then try to extrapolate beyond existing data. All processing happens on the client side. For curve fitting, we use <a href="https://github.com/subprotocol/genetic-js">genetic.js</a>. DAta is being sourced from <a href="https://github.com/CSSEGISandData/COVID-19">Johns Hopkins CSSE GitHub Data Repository</a> and <a href="https://github.com/nytimes/covid-19-data">New York Times GitHub Data Repository</a>. 
+            <p>
+              Current software is released under <a href="https://github.com/nosovicki/covid-19/blob/master/LICENSE">MIT license</a>.
+              Your can contribute to the <a href="https://github.com/nosovicki/covid-19">source code</a> of this project.
+            <p>
+              <b>References</b>
+            <p>
+              <ol>
+                <li>WHO - "Coronavirus disease 2019 (COVID-19) situation reports". 'https://www.who.int/emergencies/diseases/novel-coronavirus-2019/situation-reports'
+                <li>Dong, Ensheng, Hongru Du, and Lauren Gardner. "An interactive web-based dashboard to track COVID-19 in real time." The Lancet Infectious Diseases (2020). Retrieved from: 'https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30120-1/fulltext'
+                <li>Max Roser, Hannah Ritchie and Esteban Ortiz-Ospina (2020) - "Coronavirus Disease (COVID-19) – Statistics and Research". Published online at OurWorldInData.org. Retrieved from: 'https://ourworldindata.org/coronavirus'
+              </ol>
+           </div>
+        </div>
+        <nav class="navbar navbar-expand-sm bg-dark navbar-dark justify-content-between" style=margin-bottom:10px>
+  <a class="navbar-brand"><span id=country></span> <span style=font-size:80% class=sm><span class=actual></span> <i title="Dataset actuality" class="fas fa-question-circle"></i></small></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    <ul class="navbar-nav">
+    <!--
+      <li class="nav-item">
+        <a class="nav-link active" href="index.html">Forecast</a>
+      </li>
+      -->
+      <li class="nav-item" id=sample style=display:none>
+        <a class="btn btn-danger nav-link" href="#" onclick="analyse();return false">ANALYSE</a>
+      </li>
+                <!--
+      <li class="nav-item">
+        <a class="nav-link" href="results.html">Results</a>
+      </li>
+                <button class="btn btn-link" onclick="sampleAll();return false">Sample all</button>
+                -->
+  </div>
+    </ul>
+                <ul class="nav nav-pills nav-fill" id=source>
+  <li class="nav-item">
+    <a class="nav-link active jhu" href=# onclick="sourceData('jhu');return false">JHU <i title="Use Johns Hopkins University CSSE daily reports (updated daily)" class="fas fa-question-circle"></i></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link nyt" href=# onclick="sourceData('nyt');return false">NYT <i title="US data by state, by New Your Times" class="fas fa-question-circle"></i></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link who" href=# onclick="sourceData('who');return false">WHO <i title="Use WHO Situational Reports (updated twice a week)" class="fas fa-question-circle"></i></a>
+  </li>
+</ul>
+</nav>
+        <div class="row">
+            <div class="col" style=min-width:742px;>
+                <div style=text-align:center>
+                    <canvas onclick="$(this).removeClass('show');$('.handle').show()" id="scratch" style="width: 700px; height: 350px;background:#fff"></canvas>
+                    <button class="btn btn-info handle" onclick="$('canvas').addClass('show');$(this).hide();">DISPLAY GRAPHIC</button>
+                </div>
+                <div class="progress" style=display:none;margin:10px>
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 1%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">1%</div>
+                </div>
+                <div class="row no-gutters" id=figures style=display:none>
+                <div class="col">
+                  <span class="flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Observed cases
+                        <i title="Total number of confirmed cases in the dataset" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                    <div id=confirmed-total></div>
+                    <span class="sm actual"></span>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Observed yesterday
+                        <i title="Confirmed number of infection cases yesterday" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=confirmed-yesterday></div>
+                      <span class=sm id=date-yesterday></span>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Prognosed today
+                        <i title="Expected range of confirmed cases today, 95% confidence" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=fr-today></div>-<div id=to-today></div> <span class=sm>(<i id=sign></i><span id=today-increase></span>%)
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        + Next week
+                        <i title="Expected range of new confirmed cases during next seven days, 95% confidence" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                       <span id=fr-next-week></span>-<span id=to-next-week></span> <span class=sm>(x<span id=increase-next-week></span>)</span>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        + Next month
+                        <i title="Expected range of new confirmed cases during next 30 days, 95% confidence" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                       <span id=fr-next-month></span>-<span id=to-next-month></span> <span class=sm>(x<span id=increase-next-month></span>)</span>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result font-weight-bold">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+			Total
+                        <i title="Projected total number of confirmed cases, 95% confidence" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <span class=text-success id=fr-total></span>-<span class=text-danger id=to-total></span> <span class=sm>(x<span id=increase></span>)</span>
+                    </div>
+                  </span>
+                  </div><div class="col" style=min-width:50%>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Observed Start
+                        <i title="Moment when exponential growth started" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=start></div>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        <span id=peak-title></span>
+                        <i title="Moment when new cases peak" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=peak></div>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        <span id=end-title></span>
+                        <i title="Moment when infection risk returns back to normal" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=days></div>
+                    </div>
+                  </span>
+                  <!--
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Correlation
+                        <i title="Relation of modelled to known figures" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=correlation></div>
+                      <div id=retro></div>
+                    </div>
+                  -->
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        <span id=length-title></span>
+                        <i title="Length of current epidemic wave, days" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=length></div>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Model error
+                        <i title="Magnitude of model error vector" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=model-error></div>
+                      <div id=model-error-rank></div>
+                    </div>
+                  </span>
+                  <span class="flex-column align-items-start result">
+                    <div class="d-flex w-100 justify-content-between">
+                      <h5 class="mb-1 d-flex justify-content-between">
+                        Uncertainty
+                        <i title="Relative standard deviation value of prediction" class="fas fa-question-circle text-secondary"></i>
+                      </h5>
+                      <div id=sigma></div>
+                      <div id=sigma-rank></div>
+                    </div>
+                  </span>
+                  </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div style="padding-bottom:5px;">
+                    <input style="font-family:FontAwesome,'Open Sans',Verdana,sans-serif;font-size:inherit" autocomplete=off id=search onfocus="$(this).val('');$('#menu a').show()" class="form-control" placeholder=" &#xf002; Search for your country" />
+                </div>
+                <div class="list-group auto-height" id=menu style=max-height:800px;min-height:250px;overflow-y:auto;min-width:135px></div>
+            </div>
+        </div>
+        <br>
+        <div class=footer>
+        	<p>Copyright under <a href="https://github.com/nosovicki/covid-19/blob/master/LICENSE">MIT license</a>.<br>
+              Based on Github <a href="https://github.com/nosovicki/covid-19">Source Code</a>.</p>
+        </div>
+    </div>
+    <script>
+$.LoadingOverlaySetup({textColor: '#b3b3b3', imageColor: '#ccc', progressColor:'#17a2b8'});
+        var graph = new Graph(document.getElementById("scratch"), 60, 10000);
+
+        var genetic = Genetic.create();
+
+        genetic.formula = {
+            main: function (K, B, C, x) { return Math.pow(K, 2) * Math.exp(K * (1 - Math.exp(B * (C - x))) - B * (x - C) - K); },
+            integral: function (K, B, C, x) { return (Math.exp(-Math.exp(B * (C - x)) * K) * K) / B; },
+            centerPoint: function (K, B, C) { return (B * C - Math.log(1 / K)) / B; },
+            startPoint: function (K, B, C) { return (B * C - Math.log(10 / K + 1 / 2000)) / B; },
+            // x= (B*C-ln((1)/(500K)))/(B)
+            endPoint: function (K, B, C) { return (B * C - Math.log(1 / 500 / K)) / B; },
+        };
+
+        genetic.optimize = Genetic.Optimize.Minimize;
+        genetic.select1 = Genetic.Select1.Tournament2;
+        genetic.select2 = Genetic.Select2.FittestRandom;
+
+        genetic.seed = function () {
+
+            var a = [];
+            // create coefficients for polynomial with values between (-0.5, 0.5)
+
+            var i;
+            for (i = 0; i < this.userData["terms"]; ++i) {
+                a.push(Math.random() - 0.01);
+            }
+
+            return [12000, 0.15, -15];
+        };
+
+        genetic.scale = [4000, 0.5, 5]
+
+        genetic.mutate = function (entity) {
+
+            // allow chromosomal drift with this range (-0.05, 0.05)
+
+            var i = Math.floor(Math.random() * entity.length);
+            var drift = ((Math.random() - 0.5) * 2) * genetic.scale[i];
+            entity[i] += drift;
+
+            return entity;
+        };
+
+        genetic.crossover = function (mother, father) {
+
+            // crossover via interpolation
+            function lerp(a, b, p) {
+                return a + (b - a) * p;
+            }
+
+            var len = mother.length;
+            var i = Math.floor(Math.random() * len);
+            var r = Math.random();
+            var son = [].concat(father);
+            var daughter = [].concat(mother);
+
+            son[i] = lerp(father[i], mother[i], r);
+            daughter[i] = lerp(mother[i], father[i], r);
+
+            return [son, daughter];
+        };
+
+        genetic.evaluate = function (coefficients, x, fn) {
+            return fn(coefficients[0], coefficients[1], coefficients[2], x);
+        }
+
+        genetic.fitness = function (entity) {
+
+            var sumSqErr = 0;
+            var vertices = this.userData["vertices"];
+
+            var i;
+            for (i = 0; i < vertices.length; ++i) {
+                var err = this.evaluate(entity, vertices[i][0], genetic.formula.main) - vertices[i][1];
+                sumSqErr += err * err;
+            }
+
+            return Math.sqrt(sumSqErr);
+        };
+
+        genetic.generation = function (pop, generation, stats) {
+        };
+
+        genetic.notification = function (pop, generation, stats, isFinished) {
+
+            function poly(entity) {
+                var a = [];
+                var i;
+                for (i = entity.length - 1; i >= 0; --i) {
+                    var buf = entity[i].toPrecision(2);
+                    if (i > 1)
+                        buf += "<em><b>x<sup>" + i + "<sup></b></em>";
+                    else if (i == 1)
+                        buf += "<em><b>x</b></em>";
+
+                    a.push(buf);
+                }
+                return a.join(" + ");
+            }
+
+            function lerp(a, b, p) {
+                return a + (b - a) * p;
+            }
+
+            if (generation == 0) {
+                graph.solutions = [];
+            }
+
+            $("#solution").html(poly(pop[0].entity));
+            $("#generation").html(generation + 1);
+            var completion = Math.round((generation + 1) / 5) + '%';
+            $('.progress-bar').css({ width: completion }).html(completion);
+            $("#bestfit").html(pop[0].fitness.toPrecision(4))
+
+            $("#vertexerror").html((pop[0].fitness / graph.vertices.length).toPrecision(4));
+
+            ;
+            $("#avgbestfit").html(stats.mean.toPrecision(4));
+            $("#errorstdev").html(stats.stdev.toPrecision(4));
+
+
+            var last = graph.last || "";
+
+            var str = pop[0].entity.join(",");
+            if (last != str || isFinished) {
+
+                if (last != str) {
+                    graph.solutions.push(pop[0].entity);
+                    graph.last = str;
+                }
+
+                if (isFinished) {
+                    var res = graph.solutions.pop();
+                    window.solution = {
+                        variables: res,
+                        points: {
+                            start: genetic.formula.startPoint.apply(null, res),
+                            lastKnown: graph.vertices.length - 1,
+                            current: currentPoint,
+                            peak: genetic.formula.centerPoint.apply(null, res),
+                            end: genetic.formula.endPoint.apply(null, res)
+                        },
+                    }
+                    var zero = moment(dates[0]);
+                    solution.dates = {
+                        start: zero.clone().add(solution.points.start, 'days'),
+                        peak: zero.clone().add(solution.points.peak, 'days'),
+                        end: zero.clone().add(solution.points.end, 'days')
+                    };
+            	    var calc = function(formula, x) { return formula(res[0], res[1], res[2], x); };
+                    solution.correlation = (calc(genetic.formula.integral, solution.points.lastKnown) - calc(genetic.formula.integral, 0)) / known;
+                    solution.max = calc(genetic.formula.main, solution.points.peak);
+            	    solution.total =  calc(genetic.formula.integral, solution.points.end);
+            	    var now = calc(genetic.formula.integral, solution.points.current);
+            	    solution.today = calc(genetic.formula.main, solution.points.current);
+                    solution.nextWeek = calc(genetic.formula.integral, solution.points.current + 7) - now;
+                    solution.nextMonth = calc(genetic.formula.integral, solution.points.current + 30) - now;
+                    var yester = graph.vertices[currentPoint-1];
+                    solution.increase = { 
+                        today: yester && yester[1] ? ((solution.today - yester[1]) / yester[1]) : 0
+                    };
+                    var observationLength = Math.min(solution.points.lastKnown, solution.points.end) - Math.max(0, solution.points.start);
+                    var totalLength = solution.points.end - Math.max(0, solution.points.start);
+                    var areaX = (calc(genetic.formula.integral, solution.points.lastKnown) - calc(genetic.formula.integral, 0));
+                    var areaErr = (areaX - known) / (areaX + known) * 3;
+                    var prevX = calc(genetic.formula.main, solution.points.lastKnown - 1);
+                    var prevR = graph.vertices[solution.points.lastKnown-1][1];
+                    var lastX = calc(genetic.formula.main, solution.points.lastKnown);
+                    var lastR = graph.vertices[solution.points.lastKnown][1];
+                    var diffErr = ((lastX - prevX) - (lastR - prevR)) / solution.max / 1.5;
+                    var lastErr = (lastX - lastR) / (solution.max / 10 + lastX + lastR) * 2;
+                    var uncertainty = Math.pow((totalLength-observationLength)/(totalLength+observationLength), 2) / 2;
+                    solution.error = { proportional: lastErr, integral: areaErr, diff: diffErr, uncertainty: uncertainty,
+                        model: Math.sqrt(Math.pow(areaErr, 2) + Math.pow(lastErr, 2) + Math.pow(diffErr, 2)),
+                    };
+                    solution.error.sigma = 0.1 + solution.error.model * Math.pow(solution.error.uncertainty, 3) * 350;
+                    solution.error.range = 1 + solution.error.sigma * 2;
+                    cache[currentSource][clicked][timeBackClip] = solution;
+                    genetic.onFinished(solution);
+                }
+            }
+        };
+
+        var displayResults = function (solution) {
+            var length = solution.points.end - solution.points.start;
+            $('#length-title').text((solution.dates.end.isBefore(moment()) ? 'Observed' : 'Prognosed') + ' Length');
+            $('#length').html(numeral(length).format('0') + ' days');
+            $('#sign').text(solution.increase.today > 0 ? '+' : '');
+            $('#start').html(solution.dates.start.fromNow() + ' <span class=sm>' + solution.dates.start.format('DD MMM') + '</span>');
+            $('#end-title').text((solution.dates.end.isBefore(moment()) ? 'Observed' : 'Prognosed') + ' End');
+            $('#days').html(solution.dates.end.fromNow() + ' <span class=sm>' + solution.dates.end.format('DD MMM') + '</span>');
+            $('#peak-title').text((solution.dates.peak.isBefore(moment()) ? 'Observed' : 'Prognosed') + ' Peak');
+            $('#peak').html(solution.dates.peak.fromNow() + ' <span class=sm>' + solution.dates.peak.format('DD MMM') + '</span>');
+            $('#fr-today').number(solution.today / solution.error.range);
+            $('#to-today').number(solution.today * solution.error.range);
+            $('#today-increase').number(solution.increase.today * 100);
+            $('#fr-next-week').number(Math.max(0, solution.nextWeek / solution.error.range));
+            $('#to-next-week').number(Math.max(0, solution.nextWeek * solution.error.range));
+            $('#increase-next-week').number((solution.nextWeek) / known);
+            $('#fr-next-month').number(solution.nextMonth / solution.error.range);
+            $('#to-next-month').number(solution.nextMonth * solution.error.range);
+            $('#increase-next-month').number(solution.nextMonth / known);
+            $('#fr-total').number(Math.max(known + solution.nextMonth / solution.error.range, solution.total / solution.error.range));
+            $('#to-total').number(Math.max(known + solution.nextMonth * solution.error.range, solution.total * solution.error.range));
+            $('#increase').number(solution.total / known);
+            if (solution.total < 0 || solution.correlation < 0.3 || solution.correlation > 3 || length < 15)
+                return graph.refuse('Regression did not converge');
+            $('#correlation').number(solution.correlation);
+            $('#model-error').number(solution.error.model, '0.0');
+            $('#model-error-rank').html(solution.error.model > 1 ? '<span class="badge badge-danger">HIGH <i title="Model does not fit to data well" class="fas fa-question-circle text-white"></i></span>' : solution.error.model > 0.2 ? '<span class="badge badge-secondary">AVG <i title="Model does not fit to data perfectly" class="fas fa-question-circle text-white"></i></span>' :'<span class="badge badge-success">LOW <i title="Model fits to data very well" class="fas fa-question-circle text-white"></i></span>');
+            $('#sigma').number(solution.error.sigma, '0.0');
+            $('#sigma-rank').html(solution.error.sigma <= 0.2 ? '<span class="badge badge-success">LOW <i title="Prediction has high confidence" class="fas fa-question-circle text-white"></i></span>' : solution.error.sigma < 2.5 ? '<span class="badge badge-success">AVG <i title="Prediction is inconclusive due to lack of observation" class="fas fa-question-circle text-white"></i></span>' : '<span class="badge badge-danger">HIGH <i title="Prediction is highly speculative" class="fas fa-question-circle text-white"></i></span>');
+            $('#figures').show();
+            var lineWidth = 3, strokeStyle = '#ffc107';
+            graph.drawFunction(solution.variables, strokeStyle, lineWidth, genetic.formula.main);
+            $('.fa-question-circle').tooltip();
+            $('#sample')[known > 150 ? 'show' : 'hide']();
+            onResize();
+        };
+        genetic.onFinished = displayResults; 
+
+
+        function Graph(canvas, xmax, ymax) {
+            this.canvas = document.getElementById("scratch");
+
+            this.xmax = xmax;
+            this.ymax = ymax;
+
+            // canvas dimensions
+            this.width = parseInt(canvas.style.width);
+            this.height = parseInt(canvas.style.height);
+
+            // retina
+            var dpr = window.devicePixelRatio || 1;
+            canvas.width = this.width * dpr;
+            canvas.height = this.height * dpr;
+            this.ctx = canvas.getContext("2d");
+            this.ctx.scale(dpr, dpr);
+
+
+            this.bound = [0, this.width - 1, this.height - 1, 0];
+
+            this.bound[0] += 25;
+            this.bound[1] -= 25;
+            this.bound[2] -= 25;
+            this.bound[3] += 50;
+
+            this.vertices = [];
+            this.solutions = [];
+        }
+
+        Graph.prototype.drawFunction = function (coefficients, strokeStyle, lineWidth, fn) {
+            var ctx = this.ctx;
+            ctx.save();
+            var bound = this.bound;
+
+            //ctx.setLineDash([1, 1]);
+            ctx.strokeStyle = strokeStyle;
+            var xmax = this.xmax;
+            var ymax = this.ymax;
+            var xstride = (bound[1] - bound[3]) / xmax;
+            var ystride = (bound[2] - bound[0]) / ymax;
+            var inc = 1 / xstride;
+
+            ctx.lineWidth = lineWidth;
+
+            ctx.beginPath();
+            var x;
+            var old;
+            for (x = 0; x < xmax; x += inc) {
+                var cx = x * xstride + bound[3];
+                var cy = bound[2] - genetic.evaluate(coefficients, x, fn) * ystride;
+
+                if (x == 0) {
+                    ctx.moveTo(cx, cy);
+                    old = cy;
+                } else if (isFinite(cy)) {
+                    ctx.lineTo(cx, cy);
+                    old = cy;
+                } else {
+                    ctx.moveTo(cx, old);
+                }
+            }
+
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        Graph.prototype.draw = function (logScale) {
+            this.drawBars();
+            this.drawAxis(logScale);
+        };
+
+        Graph.prototype.drawBars = function () {
+            this.ctx.clearRect(0, 0, this.width, this.height);
+            var ctx = this.ctx;
+            ctx.save();
+            var bound = this.bound;
+            ctx.strokeStyle = "#000";
+            ctx.fillStyle = "#000";
+            var xmax = this.xmax;
+            var ymax = this.ymax;
+            var xstride = (bound[1] - bound[3]) / xmax;
+            var ystride = (bound[2] - bound[0]) / ymax;
+
+
+            var i;
+
+            // x-grid
+            for (i = 0; i <= xmax; i += Math.max(Math.floor(xmax / 15), 1)) {
+                var cx = i * xstride + bound[3];
+                var y = bound[2];
+
+                ctx.strokeStyle = "#eee";
+                ctx.beginPath();
+                ctx.moveTo(cx, bound[0]);
+                ctx.lineTo(cx, y);
+                ctx.stroke();
+            }
+
+            // y-grid
+            for (i = 0; i <= ymax; i += Math.floor(ymax / 10)) {
+                var cx = bound[3];
+                var y = bound[2] - i * ystride;
+                ctx.beginPath();
+                ctx.moveTo(cx, y);
+                ctx.lineTo(bound[1], y);
+                ctx.stroke();
+            }
+
+
+            // x/y bars
+            ctx.beginPath();
+            ctx.strokeStyle = "#bbb";
+            ctx.moveTo(bound[3], bound[0]);
+            ctx.lineTo(bound[3], bound[2]);
+            ctx.lineTo(bound[1], bound[2]);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+
+            ctx.lineWidth = 1;
+            var i;
+
+            ctx.restore();
+        }
+
+        Graph.prototype.drawAxis = function(logScale) {
+            var ctx = this.ctx;
+            ctx.save();
+            var bound = this.bound;
+            ctx.strokeStyle = "#000";
+            ctx.fillStyle = "#000";
+            var xmax = this.xmax;
+            var ymax = this.ymax;
+            var xstride = (bound[1] - bound[3]) / xmax;
+            var ystride = (bound[2] - bound[0]) / ymax;
+
+            graph.ctx.clearRect(0,0,bound[3]-1,bound[2]);
+            graph.ctx.clearRect(0,graph.bound[2]+1,graph.width,graph.height);
+
+            // x bars
+            ctx.strokeStyle = "#000";
+            for (i = 0; i <= xmax - 1; i += Math.max(Math.floor(xmax / 8), 2)) {
+                var cx = i * xstride + bound[3];
+                var y = bound[2];
+
+                ctx.beginPath();
+                ctx.moveTo(cx, y + 1);
+                ctx.lineTo(cx, y + 5);
+                ctx.stroke();
+
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(dates[i], cx, y + 16);
+            }
+            // y bars
+            for (i = 0; i <= ymax; i += Math.floor(ymax / 10)) {
+                var cx = bound[3];
+                var y = bound[2] - i * ystride;
+                ctx.beginPath();
+                ctx.moveTo(cx, y);
+                ctx.lineTo(cx - 4, y);
+                ctx.stroke();
+
+                ctx.font = "12px sans-serif";
+                ctx.textAlign = "right";
+                var val = logScale? Math.exp(i) : i;
+                ctx.fillText(numeral(val).format('0a'), cx - 8, y + 4);
+            }
+            ctx.restore();
+        }
+
+        Graph.prototype.drawText = function (msg) {
+            var ctx = this.ctx;
+            var b = this.bound;
+            ctx.font = "30px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#ccc";
+            ctx.fillText(msg, (b[3] + b[1]) / 2, (b[2] + b[0]) / 2);
+        }
+
+
+
+        Graph.prototype.drawVertices = function (fill, stroke) {
+
+            var ctx = this.ctx;
+            ctx.save();
+            var bound = this.bound;
+
+            var xmax = this.xmax;
+            var ymax = this.ymax;
+            var xstride = (bound[1] - bound[3]) / xmax;
+            var ystride = (bound[2] - bound[0]) / ymax;
+
+            var i;
+
+            ctx.fillStyle = fill || "#000";
+            ctx.strokeStyle = stroke || "#fff";
+            ctx.lineWidth = 2;
+
+            // vertices
+            for (i = 0; i < this.vertices.length; ++i) {
+                var cx = this.vertices[i][0] * xstride + bound[3];
+                var cy = bound[2] - this.vertices[i][1] * ystride;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        };
+
+    </script>
+    <script type=text/javascript>
+        window.cache = {};
+        $.expr[":"].contains = $.expr.createPseudo(function (arg) {
+            return function (elem) {
+                return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+            };
+        });
+        $.expr[":"].equals = $.expr.createPseudo(function (arg) {
+            return function (elem) {
+                return $(elem).text().toUpperCase() == arg.toUpperCase();
+            };
+        });
+        $.fn.number = function (n, fmt) {
+            fmt = fmt || '0,0 a';
+            if (this.length)
+                this.html(numeral(n).format(fmt));
+        }
+        var translate = { US: 'United States of America', 'Korea, South': 'South Korea', 'Republic of Korea': 'South Korea', 'Bahamas, The': 'Bahamas', 'Gambia, The': 'Gambia', 'Congo (Brazzaville)': 'Congo', 'Congo (Kinshasa)': 'Democratic Republic of Congo', 'Confirmed, China': 'China', 'Confirmed, Globally': 'World', 'Confirmed, Outside of China': 'Outside of China', 'Hubei , China': 'Hubei, China', 'Russia': 'Russian Federation' };
+        search = function (ev) {
+            var str = $(ev.target).val();
+            if (str.length < 2) $('#menu a').show();
+            $('#menu a').hide();
+            $('#menu a:contains(' + str + ')').show();
+        }
+        var processCsvWHO = function (csv) {
+            window.data = csv.split('\n').map(function (s) { return s.replace(/"([^,]+), ([^,]+)"/g, '$2 $1').split(','); });
+            var titles = data.shift();
+            window.cases = {};
+            window.dates = titles.splice(3).map(function(s) { return moment(s, 'M/D/YYYY').format('YYYY-MM-DD'); });
+            data.map(function (ls, i) {
+                var last = 0;
+                var title = (ls[0] ? (ls[0] + ', ') : '') + ls[1];
+                if (ls[0] != 'Deaths')
+                    cases[translate[title] || title] = ls.splice(3).map(function(x) { x = Math.max(parseInt(x) || last, last); var n = x - last; last = x; return n;});
+            });
+            window.data = csv.split('\n').map(function (s) { return s.replace(/"([^,]+), ([^,]+)"/g, '$2 $1').split(','); });
+        };
+        var processCsvNYT = function (csv, county) {
+            window.dates = [],
+            window.cases = { };
+            window.data = { };
+            var idx = county ? 4 : 3;
+            var date, title, last = {};
+            csv.split('\n').map(function (s) {
+                var ls = s.split(',');
+                var k = ls[1];
+                if (county)
+                    k += (', ' + ls[2]);
+                if (date != ls[0]) {
+                    title = undefined;
+                    date = ls[0];
+                    dates.push(date);
+                    if (!data[date])
+                        data[date] = {};
+                }
+                if (title != k) {
+                    title = k;
+                    cases[title] = [];
+                    last[title] = 0;
+                    data[date][title];
+                }
+                data[date][title] = ls[idx];
+            });
+            dates.shift(); // remove title;
+            delete cases.undefined;
+            delete cases['county, state'];
+            delete cases['state'];
+            for (var k in cases) {
+                for (var i = 0; i < dates.length; ++i) {
+                    var n = (data[dates[i]][k] || 0);
+                    cases[k].push(n - last[k]);
+                    last[k] = n;
+                }
+            }
+        };
+        var processCsvJHU = function (csv) {
+            window.data = csv.split('\n').map(function (s) { return s.replace(/"([^,]+), ([^,]+)"/g, '$2 $1').split(','); });
+            var titles = data.shift();
+            window.cases = { World:[], China:[], Canada: [] };
+            window.dates = titles.splice(4).map(function(s) { return moment(s, 'M/D/YYYY').format('YYYY-MM-DD'); });
+            data.map(function (ls, i) {
+                var last = 0;
+                var title = (ls[0] ? (ls[0] + ', ') : '') + ls[1];
+                cases[translate[title] || title] = ls.splice(4).map(function(x, i) {
+                    x = Math.max(parseInt(x) || last, last);
+                    var n = x - last;
+                    last = x;
+                    cases.World[i] = (cases.World[i]||0) + n;
+                    if (ls[1] == 'China')
+                        cases.China[i] = (cases.China[i]||0) + n;
+                    else if (ls[1] == 'Canada')
+                        cases.Canada[i] = (cases.Canada[i]||0) + n;
+                    return n;
+                });
+            });
+            delete cases.undefined;
+            delete cases['Recovered, Canada'];
+            delete cases['Diamond Princess, Canada'];
+            window.data = csv.split('\n').map(function (s) { return s.replace(/"([^,]+), ([^,]+)"/g, '$2 $1').split(','); });
+        };
+        var processCsv = function (csv) {
+            window.data = csv.split('\n').map(function (s) { return s.split(','); });
+            var titles = data.shift();
+            window.cases = {};
+            dates = [];
+            titles.map(function (s) {
+                cases[s] = [];
+            })
+            delete cases.date;
+            data.map(function (ls, i) {
+                ls.map(function (el, j) {
+                    var title = titles[j];
+                    if (title == 'date') dates.push(el);
+                    else cases[title].push(el ? parseInt(el) : 0);
+                });
+            });
+            while (!dates[dates.length - 1])
+                dates.pop();
+        };
+        var processJson = function (res) {
+            window.cases = { World: [] };
+            dates = [];
+            var start = true;
+            Object.keys(res).sort().forEach(function(k) {
+                var k2 = translate[k] || k;
+                cases[k2] = [];
+                var last = 0;
+                for (var i = 0; i < res[k].length; ++i) {
+                    var c = res[k][i];
+                    var now = c.confirmed;
+                    var diff = now - last;
+                    cases[k2].push(diff);
+                    if (start) {
+                        cases.World.push(0);
+                        dates.push(moment(res[k][i].date).format('YYYY-MM-DD'));
+                    }
+                    cases.World[i] += diff;
+                    last = now;
+                }
+                start = false;
+            });
+        }
+
+        var adjust = function (k, d) {
+            var k2 = k + ' Adjusted';
+            // approximate realistic figure for day d
+            var approx = (cases[k][d - 1] + cases[k][d + 1]) / 2;
+            // total cases before day d
+            var x = 0.0; for (i = 0; i < d; ++i) x += cases[k][i];
+            // add day d
+            x += approx;
+            var surplus = cases[k][d] - approx;
+            var K = 1 + surplus / x;
+            // distribute surplus proportionally between prior days
+            cases[k2] = [];
+            for (i = 0; i < d; ++i) cases[k2].push(cases[k][i] * K);
+            // same for day d
+            cases[k2].push(approx * K);
+            // copy the rest
+            for (i = d + 1; i < cases[k].length; ++i) cases[k2].push(cases[k][i]);
+            cases[k] = cases[k2];
+            delete cases[k2];
+        }
+        var spread = function (k, d) {
+            // take next value and previous non-zero, and draw a line between them
+            var nonZero = d;
+            while (--nonZero > 0)
+                if (cases[k][nonZero])
+                    break;
+            var n = (d - nonZero);
+            var a = cases[k][nonZero];
+            // (2 y - 2 a n)/(n^2 + n)
+            var b = (2 * cases[k][d] - 2 * a * n) / (Math.pow(n,2) + n);
+            while (++nonZero <= d)
+                cases[k][nonZero] = (a += b);
+        }
+        graph.candy = function () {
+            graph.vertices = [[graph.xmax * Math.random(),graph.ymax * Math.random()]];
+            graph.drawVertices('rgb(' + [1,2,3].map(function(){return Math.random() * 255;}) +')'); 
+        }
+        graph.refuse = function (msg) {
+            if (cache[currentSource][clicked])
+                delete cache[currentSource][clicked][timeBackClip];
+            $('#sum').parent().show();
+            $('#figures').show();
+            $('.result').hide();
+            graph.draw();
+            graph.drawVertices();
+            graph.drawText(msg);
+        }
+        var median = function(ar){
+            for (var i = 0; i < ar.length; ++i){
+                var cur = ar[i];
+                var prev = ar[i-1] || cur;
+                var next = ar[i+1] || cur;
+                ar[i] = [cur[0], (prev[1] + next[1]) / 2];
+            }
+        }
+        var estimate = function (country) {
+            window.clicked = country;
+            if (!cache[currentSource][clicked])
+                cache[currentSource][clicked] = [];
+            $('#country').html(country);
+            $('.progress').show();
+            $('#figures').hide();
+            $('.result').show();
+            graph.vertices = cases[country].map(function (c, i) { return [i, c]; });
+            if (window.timeBackClip)
+                graph.vertices.length = window.timeBackClip;
+            window.known = graph.vertices.reduce(function (a, b) { return a + b[1]; }, 0);
+            window.currentPoint = window.timeBackClip || moment().diff(moment(dates[0]), 'days')
+            $('#confirmed-total').number(known);
+            if (graph.vertices[currentPoint - 1]) {
+                $('#confirmed-yesterday').number(graph.vertices[currentPoint - 1][1]);
+                $('#date-yesterday').html('(' + moment(dates[currentPoint - 1]).format('DD MMM') + ')');
+            } else
+                $('#confirmed-yesterday').html('<span class="badge badge-danger">NONE <i title="Not present in the data source" class="fas fa-question-circle text-white"></i></span>');
+                $('#date-yesterday').html('(' + moment().add(-1,'days').format('DD MMM') + ')');
+            var dataPoints = graph.vertices.reduce(function (a, b) { return a + (b[1] > 0); }, 0);
+            $('#sum').number(known);
+            if (known < 10 || dataPoints < 3)
+                return graph.refuse('Insufficient number of observations');
+            var ymax = graph.vertices.reduce(function (a, b) { return Math.max(a, b[1]); }, 0) * 2
+            var scale = Math.floor(Math.log(ymax) / Math.log(10));
+            var factor = Math.pow(10, scale);
+            ymax = Math.round(ymax / factor) * factor;
+            graph.xmax = graph.vertices.length;
+            graph.ymax = Math.max(10, ymax);
+            graph.draw();
+            graph.drawText(country);
+            //graph.drawVertices('#abc');
+            //median(graph.vertices);
+            //median(graph.vertices);
+            graph.drawVertices('#000');
+            if (cache[currentSource][clicked][timeBackClip]) {
+                genetic.onFinished(cache[currentSource][clicked][timeBackClip]);
+            }
+            else {
+                var config = { iterations: 500, size: 250, crossover: 0.4, mutation: 1.0, skip: 10 };
+                var userData = { terms: 3, vertices: graph.vertices };
+                $('h1')[0].scrollIntoView();
+                genetic.evolve(config, userData);
+            }
+        }
+        var clickFn = function (el, k) {
+            return function () {
+                $('#sample').hide();
+                genetic.onFinished = displayResults;
+                el.parent().find('.active').removeClass('active');
+                el.addClass('active');
+                estimate(k);
+            }
+        }
+        $('#search').on('keyup', search);
+        var initiateUI = function() {
+            $('#source .nav-link.active').removeClass('active');
+            $('#source .nav-link.' + currentSource).addClass('active');
+            $('.container').LoadingOverlay('hide');
+            $('.actual').text('(' + moment(dates[window.timeBackClip || (dates.length - 1)]).add(1,'days').fromNow() + ')');
+            $('#menu').html('');
+            for (k in cases) {
+                var el = $('<a class="list-group-item list-group-item-action" href=#' + (window.timeBackClip || '') + ';' + currentSource + ';' + k.replace(/ /g, '+') + '>' + k + '</div>');
+                el.on('click', clickFn(el, k));
+                $('#menu').append(el);
+            }
+            if (window.clicked && $('#menu a:equals(' + clicked + ')').length)
+                $($('#menu a:equals(' + clicked + ')')[0]).click();
+            else
+                $($('#menu a:first')[0]).click();
+            if ($('#search').val())
+                $('#search').keyup();
+        }
+        var sourceData = function(src) {
+            window.cache[src] = {};
+            window.currentSource = src;
+            $('.container').LoadingOverlay('show');
+            var error = function(){
+                graph.draw();
+                graph.refuse('Network error');
+                var int = window.setInterval(graph.candy, 30);
+                window.setTimeout(function () { window.clearInterval(int); }, 5000);
+            }
+            if (src == 'nyt')
+                //$.get('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv').then(function (csv) {
+                $.get('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv').then(function (csv) {
+                    processCsvNYT(csv);
+                    initiateUI();
+                }).fail(function () {
+                    graph.refuse('Network error');
+                    $('.container').LoadingOverlay('hide');
+                    swal({ icon: 'error', content: $('<div>Error getting COVID-19 data from <i>raw.githubusercontent.com/CSSEGISandData</i></div>')[0], title: 'Network Error' })
+                    .then(error);
+                });
+            else if (src == 'who')
+                $.get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/who_covid_19_situation_reports/who_covid_19_sit_rep_time_series/who_covid_19_sit_rep_time_series.csv').then(function (csv) {
+                    processCsvWHO(csv);
+                    adjust('China', 27);
+                    adjust('World', 27);
+                    delete cases['Hubei, China'];
+                    delete cases['Guangdong, China'];
+                    delete cases['Henan, China'];
+                    delete cases['Zhejiang, China'];
+                    delete cases['Hunan, China'];
+                    delete cases['Anhui, China'];
+                    delete cases['Jiangxi, China'];
+                    delete cases['Shandong, China'];
+                    delete cases['Jiangsu, China'];
+                    delete cases['Chongqing, China'];
+                    delete cases['Sichuan, China'];
+                    delete cases['Heilongjiang, China'];
+                    delete cases['Beijing, China'];
+                    delete cases['Shanghai, China'];
+                    delete cases['Hebei, China'];
+                    delete cases['Fujian, China'];
+                    delete cases['Guangxi, China'];
+                    delete cases['Shaanxi, China'];
+                    delete cases['Yunnan, China'];
+                    delete cases['Hainan, China'];
+                    delete cases['Guizhou, China'];
+                    delete cases['Tianjin, China'];
+                    delete cases['Shanxi, China'];
+                    delete cases['Liaoning, China'];
+                    delete cases['Hong Kong, China'];
+                    delete cases['Jilin, China'];
+                    delete cases['Gansu, China'];
+                    delete cases['Xinjiang, China'];
+                    delete cases['Inner Mongolia, China'];
+                    delete cases['Ningxia, China'];
+                    //delete cases['Taiwan, China'];
+                    delete cases['Qinghai, China'];
+                    //delete cases['Macau, China'];
+                    delete cases['Xizang, China'];
+                    delete cases["Unspecified*, China"];
+                    initiateUI();
+                }).fail(function () {
+                    $('.container').LoadingOverlay('hide');
+                    swal({ icon: 'error', content: $('<div>Error getting COVID-19 data from <i>raw.githubusercontent.com/CSSEGISandData</i></div>')[0], title: 'Network Error' })
+                    .then(error);
+                });
+            else if (src == 'jhu')
+                $.get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv').then(function (csv) {
+                    processCsvJHU(csv);
+                    adjust('China', 22);
+                    adjust('China', 24);
+                    adjust('Hubei, China', 22);
+                    spread('Hubei, China', 22);
+                    adjust('Hubei, China', 23);
+                    adjust('World', 22);
+                    adjust('World', 23);
+                    initiateUI();
+                }).fail(function () {
+                    graph.refuse('Network error');
+                    $('.container').LoadingOverlay('hide');
+                    swal({ icon: 'error', content: $('<div>Error getting COVID-19 data from <i>raw.githubusercontent.com/CSSEGISandData</i></div>')[0], title: 'Network Error' })
+                    .then(error);
+                });
+            else if (src == 'oxford')
+                $.get('https://cowid.netlify.com/data/new_cases.csv').then(function (csv) {
+                    processCsv(csv);
+                    adjust('China', 27);
+                    adjust('World', 27);
+                    initiateUI();
+                }).fail(function () {
+                    swal({ icon: 'error', content: $('<div>Error getting COVID-19 data from <i>ourworldindata.org</i></div>')[0], title: 'Network Error' });
+                });
+        }
+        var onResize = function () {
+            var foot = $('.footer').height() + 20;
+            $('.auto-height').css('height', function () {
+                var off = $(this).offset();
+                if (off) {
+                    var h = $(window).height() - off.top - foot;
+                    return h + 'px';
+                }
+            });
+        }
+        onResize();
+        $(window).resize(onResize);
+        var onHashChange = function() {
+            window.appConf = location.hash.substr(1).split(';');
+            var oldClicked = window.clicked;
+            window.clicked = appConf[2] && appConf[2].replace(/\+/g, ' ');
+            var oldClip = window.timeBackClip;
+            window.timeBackClip = parseInt(appConf[0]);
+            if (!window.currentSource || window.currentSource != appConf[1])
+                sourceData(appConf[1] || 'jhu');
+            // true only when manually change timebackclip
+            else if (window.timeBackClip && oldClip != window.timeBackClip && window.clicked && window.clicked == oldClicked)
+                estimate(window.clicked);
+        }
+        window.addEventListener('hashchange', onHashChange);
+        onHashChange();
+        graph.resize = function(x,y) {
+            if (x) graph.xmax = Math.max.apply(null, graph.vertices.map(function(x){ return isFinite(x[0]) ? x[0] : -1/0; }));
+            if (y) graph.ymax = Math.max.apply(null, graph.vertices.map(function(x){ return isFinite(x[1]) ? x[1] : -1/0; }));
+        }
+        var plotTolerance = function (src, subj) {
+            displayResults(solution);
+            graph.vertices = [], graph.upper = [], graph.lower = [];
+            cache[src][subj].map(function(s, i){
+                graph.vertices.push([i-1, Math.log(s.total / s.error.range)]);
+                graph.vertices.push([i-1, Math.log(s.total * s.error.range)]);
+                graph.upper[i-1] = Math.log(s.total * s.error.range);
+                graph.lower[i-1] = Math.log(s.total / s.error.range);
+            });
+            graph.resize(false,true);
+            graph.drawAxis(1);
+            graph.drawFunction([0,0,0], '#00f', 2, function(a,b,c,x) { return Math.log(solution.total); });
+            //graph.drawFunction([0,0,0], '#dc3545', 2, function(a,b,c,x) { return smooth(graph.upper, x); });
+            //graph.drawFunction([0,0,0], '#28a745', 2, function(a,b,c,x) { return smooth(graph.lower, x); });
+            graph.drawFunction([0,0,0], '#e00', 2, function(a,b,c,x) { return graph.upper[Math.round(x)]; });
+            graph.drawFunction([0,0,0], '#0d0', 2, function(a,b,c,x) { return graph.lower[Math.round(x)]; });
+            genetic.onFinished = displayResults;
+        }
+        function smooth(ls, x) {
+            var a = ls[Math.floor(x)], b = ls[Math.ceil(x)], c = x-Math.floor(x);
+            return a + (1 - Math.cos(c * Math.PI)) / 2 * (b - a);
+        }
+        function loopDates(src, subj, fr, to, then) {
+            $.LoadingOverlay('show', {progress: true, text:'Running earlier predictions...'});
+            then = then || function () { plotTolerance(src, subj); }
+            function iter(n) { 
+                if (n >= (to || cases[subj].length)) {
+                    genetic.onFinished = function() {
+                        $.LoadingOverlay('hide');
+                        then();
+                    }
+                    timeBackClip = undefined;
+                    estimate(subj);
+                }
+                else {
+                    genetic.onFinished = function() { iter(n+1); }
+                    $.LoadingOverlay('progress', (n - fr) / (to - fr) * 100);
+                    timeBackClip = n+1;
+                    estimate(subj);
+                    //location.hash='#'+[n+1,src,subj.replace(/ /g, '+')].join(';');
+                }
+            }
+            iter(fr || 4);
+        }
+        function analyse(then) {
+            var end = Math.min(dates.length, Math.floor(solution.points.end));
+            var minPossible = -1, sum = 0;
+            while (sum < 10 && minPossible < end) {
+                sum += cases[clicked][++minPossible];
+            }
+            var start = Math.max(minPossible, Math.floor(solution.points.start));
+            //end = start + 1;
+            loopDates(currentSource, clicked, start, end, then);
+        }
+        function sampleAll() {
+            var start = $($('#menu a')[0]);
+            window.predictions = { jhu:{}, who: {} };
+            var startNext = function () {
+                predictions[currentSource][clicked] = cache[currentSource][clicked].map(function(s){
+                    return [s.relstdev * 100, Math.abs((s.total-solution.total)/solution.total) * 100];
+                });
+                start = start.next();
+                if (start.length) {
+                    var name = start.text();
+                    var cc = cases[name].reduce(function (a, b) { return a + b; }, 0);
+                    if (cc > 500) {
+                        genetic.onFinished = function () {
+                            if (known > 150)
+                                analyse(startNext);
+                            else
+                                startNext()
+                        }
+                        estimate(name);
+                    } else 
+                        startNext();
+                }
+            }
+            startNext();
+        }
+            
+    </script>
+</body>
+</html>
